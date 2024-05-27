@@ -1,8 +1,8 @@
 import os
+import ctypes
 from urllib.parse import urlparse
 
 import requests
-
 
 def get_download_link(download_url):
     parsed_url = urlparse(download_url)
@@ -12,11 +12,6 @@ def get_download_link(download_url):
     file_name = path_segments[-1].encode("latin-1", "ignore").decode("latin-1")
 
     headers = {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Encoding": "gzip, deflate, br, zstd",
-        "Accept-Language": "en-GB,en;q=0.9",
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
         "Content-Type": "application/x-www-form-urlencoded",
         "Cookie": f"lang=english; file_name={file_name}; file_code={file_code};",
         "Host": "datanodes.to",
@@ -60,6 +55,6 @@ if __name__ == "__main__":
                 download_link = get_download_link(url)
                 if download_link:
                     output_file.write(download_link + "\n")
-                print(f"Done url {index+1} out of {len(urls)}")
+                ctypes.windll.kernel32.SetConsoleTitleW(f"Datanodes Link Generator - {index+1}/{len(urls)}")
 
     print("[*] Done generating download links!")
