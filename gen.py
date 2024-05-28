@@ -1,9 +1,10 @@
 import os
-import asyncio
-import aiohttp
 import ctypes
+import asyncio
 import platform
 from urllib.parse import urlparse
+
+import aiohttp
 
 def set_console_title(title):
     system = platform.system()
