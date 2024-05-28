@@ -1,5 +1,5 @@
 @echo off
-pip install requests aiohttp
+pip install aiohttp
 
 if %errorlevel% equ 0 (
     echo Installation successful.
