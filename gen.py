@@ -1,10 +1,19 @@
 import os
+import asyncio
+import aiohttp
 import ctypes
+import platform
 from urllib.parse import urlparse
 
-import requests
+def set_console_title(title):
+    system = platform.system()
 
-def get_download_link(download_url):
+    if system == "Windows":
+        ctypes.windll.kernel32.SetConsoleTitleW(title)
+    else:
+        print(f'\33]0;{title}\a', end='', flush=True)
+
+async def get_download_link(session, download_url):
     parsed_url = urlparse(download_url)
     path_segments = parsed_url.path.split("/")
 
@@ -29,16 +38,29 @@ def get_download_link(download_url):
         "method_premium": "",
     }
 
-    response = requests.post(
+    async with session.post(
         "https://datanodes.to/download",
         data=payload,
         headers=headers,
         allow_redirects=False,
-    )
+    ) as response:
+        if response.status == 302:
+            return response.headers.get("Location")
+        return None
 
-    if response.status_code == 302:
-        return response.headers.get("Location")
+async def process_links(urls):
+    async with aiohttp.ClientSession() as session:
+        download_links = []
+        total_urls = len(urls)
+        
+        for index, url in enumerate(urls):
+            url = url.strip()
+            if url:
+                download_link = await get_download_link(session, url)
+                download_links.append(download_link)
+                set_console_title(f"Datanodes Link Generator - {index+1}/{total_urls}")
 
+        return download_links
 
 if __name__ == "__main__":
     if not os.path.exists("links.txt"):
@@ -48,13 +70,11 @@ if __name__ == "__main__":
     with open("links.txt", "r") as file:
         urls = file.readlines()
 
+    download_links = asyncio.run(process_links(urls))
+
     with open("output_links.txt", "a", encoding="utf-8") as output_file:
-        for index, url in enumerate(urls):
-            url = url.strip()
-            if url:
-                download_link = get_download_link(url)
-                if download_link:
-                    output_file.write(download_link + "\n")
-                ctypes.windll.kernel32.SetConsoleTitleW(f"Datanodes Link Generator - {index+1}/{len(urls)}")
+        for download_link in download_links:
+            if download_link:
+                output_file.write(download_link + "\n")
 
     print("[*] Done generating download links!")
