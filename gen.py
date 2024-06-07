@@ -1,10 +1,12 @@
 import os
-import ctypes
 import asyncio
+import ctypes
 import platform
 from urllib.parse import urlparse
 
 import aiohttp
+from bs4 import BeautifulSoup
+from pypasser import reCaptchaV3
 
 def set_console_title(title):
     system = platform.system()
@@ -12,7 +14,51 @@ def set_console_title(title):
     if system == "Windows":
         ctypes.windll.kernel32.SetConsoleTitleW(title)
     else:
-        print(f'\33]0;{title}\a', end='', flush=True)
+        print(f"\33]0;{title}\a", end="", flush=True)
+
+async def get_captcha_response(session, download_url): #GETTING ANCHOR LINK IS BROKEN!!!!!!!
+    async with session.get(download_url,
+    ) as response:
+        if response.status == 200:
+            page_html = await response.text()
+            soup = BeautifulSoup(page_html, "html.parser")
+
+            captcha_tag = soup.find("iframe", {"title": "reCAPTCHA"})
+            return reCaptchaV3(captcha_tag.get("src"))
+        return None
+
+async def get_rand_value(session, id, file_name):
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Cookie": f"lang=english; file_name={file_name}; file_code={id};",
+        "Host": "datanodes.to",
+        "Origin": "https://datanodes.to",
+        "Referer": "https://datanodes.to/download",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    }
+
+    payload = {
+        "op": "download1",
+        "usr_login": "",
+        "id": id, 
+        "fname": file_name,
+        "referer": "",
+        "method_free": "Free Download >>"
+    }
+
+    async with session.post(
+        "https://datanodes.to/download",
+        data=payload,
+        headers=headers,
+        allow_redirects=False,
+    ) as response:
+        if response.status == 200:
+            page_html = await response.text()
+            soup = BeautifulSoup(page_html, "html.parser")
+
+            download_tag = soup.find("download-countdown")
+            return download_tag.get("rand")
+        return None
 
 async def get_download_link(session, download_url):
     parsed_url = urlparse(download_url)
@@ -20,6 +66,9 @@ async def get_download_link(session, download_url):
 
     file_code = path_segments[1].encode("latin-1", "ignore").decode("latin-1")
     file_name = path_segments[-1].encode("latin-1", "ignore").decode("latin-1")
+
+    rand_value = await get_rand_value(session, file_code, file_name)
+    captcha_response = await get_captcha_response(session, download_url)
 
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -33,10 +82,11 @@ async def get_download_link(session, download_url):
     payload = {
         "op": "download2",
         "id": file_code,
-        "rand": "",
+        "rand": rand_value,
         "referer": "https://datanodes.to/download",
         "method_free": "Free Download >>",
         "method_premium": "",
+        "g-recaptcha-response": captcha_response
     }
 
     async with session.post(
