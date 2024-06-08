@@ -1,5 +1,5 @@
 @echo off
-pip install aiohttp pip install beautifulsoup4
+pip install aiohttp beautifulsoup4
 
 if %errorlevel% equ 0 (
     echo Installation successful.
