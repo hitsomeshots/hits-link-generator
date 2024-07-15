@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 
 import aiohttp
 from bs4 import BeautifulSoup
-from pypasser import reCaptchaV3
 
 def set_console_title(title):
     system = platform.system()
@@ -15,17 +14,6 @@ def set_console_title(title):
         ctypes.windll.kernel32.SetConsoleTitleW(title)
     else:
         print(f"\33]0;{title}\a", end="", flush=True)
-
-async def get_captcha_response(session, download_url): #GETTING ANCHOR LINK IS BROKEN!!!!!!!
-    async with session.get(download_url,
-    ) as response:
-        if response.status == 200:
-            page_html = await response.text()
-            soup = BeautifulSoup(page_html, "html.parser")
-
-            captcha_tag = soup.find("iframe", {"title": "reCAPTCHA"})
-            return reCaptchaV3(captcha_tag.get("src"))
-        return None
 
 async def get_rand_value(session, id, file_name):
     headers = {
@@ -68,7 +56,6 @@ async def get_download_link(session, download_url):
     file_name = path_segments[-1].encode("latin-1", "ignore").decode("latin-1")
 
     rand_value = await get_rand_value(session, file_code, file_name)
-    captcha_response = await get_captcha_response(session, download_url)
 
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -86,7 +73,7 @@ async def get_download_link(session, download_url):
         "referer": "https://datanodes.to/download",
         "method_free": "Free Download >>",
         "method_premium": "",
-        "g-recaptcha-response": captcha_response
+        "g-recaptcha-response": ""
     }
 
     async with session.post(
