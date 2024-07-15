@@ -7,3 +7,7 @@ How to run with Python:
 - Run install_dependencies
 - Put download links in links.txt
 - Run the script with python
+
+How to run compiled version:
+- Put download links in links.txt
+- Run the executable
