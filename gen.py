@@ -55,8 +55,6 @@ async def get_download_link(session, download_url):
     file_code = path_segments[1].encode("latin-1", "ignore").decode("latin-1")
     file_name = path_segments[-1].encode("latin-1", "ignore").decode("latin-1")
 
-    rand_value = await get_rand_value(session, file_code, file_name)
-
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
         "Cookie": f"lang=english; file_name={file_name}; file_code={file_code};",
@@ -69,11 +67,11 @@ async def get_download_link(session, download_url):
     payload = {
         "op": "download2",
         "id": file_code,
-        "rand": rand_value,
+        "rand": "",
         "referer": "https://datanodes.to/download",
         "method_free": "Free Download >>",
         "method_premium": "",
-        "g-recaptcha-response": ""
+        "adblock_detected": ""
     }
 
     async with session.post(
