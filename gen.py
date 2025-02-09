@@ -74,8 +74,10 @@ async def process_links(urls):
                     download_link = None
                 download_links.append(download_link)
         return download_links
-
 if __name__ == "__main__":
+    if platform.system() == "Windows":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
     if not os.path.exists("links.txt"):
         with open("links.txt", "w") as file:
             exit()
