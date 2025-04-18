@@ -1,5 +1,5 @@
 @echo off
-pip install aiohttp beautifulsoup4
+pip install aiohttp beautifulsoup4 pyperclip
 
 if %errorlevel% equ 0 (
     echo Installation successful.
