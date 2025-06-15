@@ -3,7 +3,7 @@ import re
 import ctypes
 import asyncio
 import platform
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 
 import aiohttp
 from bs4 import BeautifulSoup
@@ -11,8 +11,10 @@ from bs4 import BeautifulSoup
 def set_console_title(title):
     system = platform.system()
     if system == "Windows":
+        os.system("cls")
         ctypes.windll.kernel32.SetConsoleTitleW(title)
     else:
+        os.system("clear")
         print(f"\33]0;{title}\a", end="", flush=True)
 
 async def get_fuckingfast_link(session, download_url):
@@ -40,7 +42,7 @@ async def get_datanodes_link(session, download_url):
         "Host": "datanodes.to",
         "Origin": "https://datanodes.to",
         "Referer": "https://datanodes.to/download",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
     }
     payload = {
         "op": "download2",
@@ -49,12 +51,13 @@ async def get_datanodes_link(session, download_url):
         "referer": "https://datanodes.to/download",
         "method_free": "Free Download >>",
         "method_premium": "",
-        "adblock_detected": ""
+        "dl": 1
     }
     async with session.post("https://datanodes.to/download", data=payload, headers=headers, allow_redirects=False) as response:
-        if response.status == 302:
-            return response.headers.get("Location")
-        return None
+        response_data = await response.json()
+        download_url = unquote(response_data.get("url"))
+        return download_url
+    return None
 
 async def process_links(urls):
     async with aiohttp.ClientSession() as session:
@@ -87,3 +90,4 @@ if __name__ == "__main__":
             if download_link:
                 output_file.write(download_link + "\n")
     print("[*] Done generating download links!")
+    input()
